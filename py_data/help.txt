@@ -1,0 +1,50 @@
+| This is a help
+|
+|   help |
+|        | Outputs this text
+|        |
+|
+|
+|   exit |
+|        | Exits the program
+|        |
+|
+|
+|   users |
+|         | output a list of users
+|         |
+|
+|
+|   newuser|
+|          | create a new user
+|          |
+|
+|
+|   save |
+|        | saves the user file
+|        |
+|
+|
+|   open |
+|        | open the user file
+|        |
+|
+|
+|   raw |
+|       | output all of the user file
+|       |
+|
+|
+|   cb |
+|      | Outputs your current balance
+|      |
+|
+|   compare |
+|           | Compare between 2 search inputs ( just text will give you search)
+|           |
+|
+|   mostused |
+|            | See what words used the most in the file.
+|            |
+|
+|
