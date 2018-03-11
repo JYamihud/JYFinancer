@@ -11,7 +11,7 @@ def warn(w=None, text="Mistake Happened"):
     box = gtk.VBox()
     win.add(box)
     
-    
+    print text
     
     warning = gtk.Label()
     warning.modify_font(pango.FontDescription("Bold 20"))
