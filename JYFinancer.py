@@ -1,27 +1,37 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
+VERSION = 0.0
+
 #### IMPORTING STUFF
 
 from modules import hcu
 from modules import warning
+from modules import jyfi
+from modules import getlocation
+
+jyfi.VERSION = VERSION
+
 import gtk
 import os
 import pango
 import random
 from datetime import datetime
 
+lastdateformat = "%Y/%m/%d"
 
-#Constants
+savefile = None
+cbs = [0]
+pds = [0]
+pdsettings = ["m", 10]
 
+lastdate = str(datetime.now().strftime(lastdateformat))
+stores = []
+items = []
 recietes = []
-stores = ["Tiv Taam", "Walmart"]
-items = ["Cola", "Shocko"]
 
-
-
-consolestring = ""
-
+        
+    
 
 
 mainwindow = gtk.Window()
@@ -35,18 +45,190 @@ gtk.window_set_default_icon_from_file("py_data/icon.png")
 mainbox = gtk.VBox(False)
 mainwindow.add(mainbox)
 
-def Print(text):
-    global consolestring
-    consolestring = text + "\n" + consolestring
-    try:
-        output.set_text(consolestring)    
-    except:
-        pass
-    print text
+#def Print(text):
+#    global consolestring
+#    consolestring = text + "\n" + consolestring
+    
+#    print text
 
 
-Print("Start Up")
+#Print("Start Up")
 
+# ITEM VIEVER
+
+class item_viewer:
+    
+    def __init__(self, w, r):
+        self.w = w
+        self.r = r
+    
+        try:
+            self.w.set_sensitive(False)
+        except:
+            pass
+        
+        
+        self.itemwindow = gtk.Window()
+        self.itemwindow.set_default_size(400, 400)
+        self.itemwindow.set_position(gtk.WIN_POS_CENTER)
+        
+        if current == "i":
+            self.itemwindow.set_title(items[self.r])
+        elif current == "s":
+            self.itemwindow.set_title(stores[self.r])
+        def close(w):
+            
+            try:
+                self.w.set_sensitive(True)
+            except:
+                pass
+        self.itemwindow.connect("destroy", close)
+        
+        
+        self.box = gtk.VBox(False)
+        self.itemwindow.add(self.box)
+        
+        # IF IT'S ITEM
+        
+        if current == "i":
+            
+            #sto
+            
+            
+            
+            self.stcroll = gtk.ScrolledWindow()
+            self.stcroll.set_size_request(200, 200)
+            self.box.pack_start(self.stcroll, True)
+            
+            self.storebox = gtk.VBox(False)
+            self.stcroll.add_with_viewport(self.storebox)
+            
+            
+            # rec
+            
+            
+            
+            self.recscroll = gtk.ScrolledWindow()
+            self.recscroll.set_size_request(200, 200)
+            self.box.pack_start(self.recscroll, True)
+            
+            self.recbox = gtk.VBox(False)
+            self.recscroll.add_with_viewport(self.recbox)
+            
+            storefound = []
+            
+            for index, i in enumerate(recietes):
+                
+                for b in i[4]:
+                    if b[1] == r:
+                        
+                        if i[0] not in storefound:
+                            storefound.append(i[0])
+                        
+                        
+                        recb = gtk.HBox(False)
+                        recicon = gtk.Image()
+                        recicon.set_from_file("py_data/icons/file.png")
+                        
+                        recb.pack_start(recicon, False)
+                        
+                        text = "  "+str(i[2][0])+"/"+str(i[2][1])+"/"+str(i[2][2])+"     "+str(i[1][0])+":"+str(i[1][1])+"     "+str(stores[i[0]]+"  "+str(b[2]*b[0])+" $")
+                
+                        recb.pack_start(gtk.Label(text), False)
+            
+                        self.recbox.pack_start(recb, False)
+                        
+            for i in storefound:
+                
+                storeicon = gtk.Image()
+                storeicon.set_from_file("py_data/icons/store.png")          
+                
+                storeb = gtk.HBox(False)
+                storeb.pack_start(storeicon, False)
+                storeb.pack_start(gtk.Label("  "+stores[i]), False)
+                
+                
+                self.storebox.pack_start(storeb, False)
+                        
+                
+        # IF IT'S STORE
+        
+        if current == "s":
+            
+            #sto
+            
+            
+            
+            self.stcroll = gtk.ScrolledWindow()
+            self.stcroll.set_size_request(200, 200)
+            self.box.pack_start(self.stcroll, True)
+            
+            self.storebox = gtk.VBox(False)
+            self.stcroll.add_with_viewport(self.storebox)
+            
+            
+            # rec
+            
+            
+            
+            self.recscroll = gtk.ScrolledWindow()
+            self.recscroll.set_size_request(200, 200)
+            self.box.pack_start(self.recscroll, True)
+            
+            self.recbox = gtk.VBox(False)
+            self.recscroll.add_with_viewport(self.recbox)
+            
+            itemfound = []
+            
+            for index, i in enumerate(recietes):
+                
+                
+                if i[0] == r:
+                    
+                    
+                    
+                    for b in i[4]:
+                        if b[1] not in itemfound:
+                            itemfound.append(b[1])
+                    
+                        
+                    recb = gtk.HBox(False)
+                    recicon = gtk.Image()
+                    recicon.set_from_file("py_data/icons/file.png")
+                    
+                    recb.pack_start(recicon, False)
+                
+                    try:    
+                        text = "  "+str(i[2][0])+"/"+str(i[2][1])+"/"+str(i[2][2])+"     "+str(i[1][0])+":"+str(i[1][1])+"     "+str(stores[i[0]]+"  "+str(b[2]*b[0])+" $")
+                    except:
+                        text = "  "+str(i[2][0])+"/"+str(i[2][1])+"/"+str(i[2][2])+"     "+str(i[1][0])+":"+str(i[1][1])+"     "+str(stores[i[0]])
+                
+                    recb.pack_start(gtk.Label(text), False)
+                    self.recbox.pack_start(recb, False)
+                    
+            for i in itemfound:
+                
+                storeicon = gtk.Image()
+                storeicon.set_from_file("py_data/icons/item.png")          
+                
+                storeb = gtk.HBox(False)
+                storeb.pack_start(storeicon, False)
+                storeb.pack_start(gtk.Label("  "+items[i]), False)
+                
+                
+                self.storebox.pack_start(storeb, False)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        self.itemwindow.show_all()
+            
+    
 
 
 
@@ -73,30 +255,46 @@ class reciete_editor:
             self.addrecwin.set_position(gtk.WIN_POS_CENTER)
             
             
-            if self.r == 0:
-                self.tag = len(recietes)+1
+            
+            
+            
+            
+            
+            if self.r == -1:
+                self.tag = len(recietes)
                 self.store = ""
                 self.time = [int(datetime.now().hour), int(datetime.now().minute)]
                 self.date = [int(datetime.now().year), int(datetime.now().month), int(datetime.now().day)]
                 self.total = 0
                 self.rlist = []
+                self.comment = "Comment:"
                 
-                
+                print "Self is -1"
                 
                 
             else:
+                print "Self is something else"
+        
+                print recietes, self.r
+        
+                self.tag = self.r
+                self.store = stores[recietes[self.r][0]]
+                self.time  = recietes[self.r][1]
+                self.date  = recietes[self.r][2]
+                self.total = recietes[self.r][3]
+                rlist = recietes[self.r][4]
                 
-                for i in recietes:
-                    if i[0] == r:
-                        
+                self.rlist = []
                 
-                        self.tag = self.r
-                        self.store = i[1]
-                        self.time  = i[2]
-                        self.date  = i[3]
-                        self.total = i[4]
-                        self.rlist = i[5]
-            
+                print "HERE", rlist
+                
+                for i in rlist:
+                    i[1] = items[i[1]]
+                    self.rlist.append(i)
+                
+                
+                self.comment = recietes[self.r][5]
+    
             
             
             
@@ -115,7 +313,10 @@ class reciete_editor:
             
             self.storebox = gtk.HBox(False)
             self.recbox.pack_start(self.storebox, False)
-            self.storebox.pack_start(gtk.Label(" Store: "), False)
+            
+            storeicon = gtk.Image()
+            storeicon.set_from_file("py_data/icons/store.png")
+            self.storebox.pack_start(storeicon, False)
             
             def storeentry(w):
                 self.store = w.get_text()
@@ -224,6 +425,7 @@ class reciete_editor:
             self.recbox.pack_start(self.itembox, False)
             
             
+            
             # AMOUNT
             
             self.itembox.pack_start(gtk.Label("  X"), False)
@@ -235,8 +437,9 @@ class reciete_editor:
             self.itembox.pack_start(self.amountbutton, False)
             self.amountbutton.connect("value-changed", timechange)
             
-            self.itembox.pack_start(gtk.Label(" Item: "), False)
-            
+            itemicon = gtk.Image()
+            itemicon.set_from_file("py_data/icons/item.png")
+            self.itembox.pack_start(itemicon, False)
             
             
             def newitem(w):
@@ -270,7 +473,11 @@ class reciete_editor:
                 
                 refrash()
             
-            self.addbutton = gtk.Button("Add Item")
+            self.addbutton = gtk.Button()
+            addbuttonicon = gtk.Image()
+            addbuttonicon.set_from_file("py_data/icons/add.png")
+            self.addbutton.add(addbuttonicon)
+            self.addbutton.props.relief = gtk.RELIEF_NONE
             self.itembox.pack_end(self.addbutton, False)
             self.addbutton.connect("clicked", additem)
             
@@ -295,6 +502,9 @@ class reciete_editor:
             
             self.recietescroll = gtk.ScrolledWindow()
             self.recbox.pack_start(self.recietescroll, True)
+            self.orgabox = gtk.VBox(False)
+            self.recietescroll.add_with_viewport(self.orgabox)
+            
             
             def refrash(w=None):
             
@@ -302,25 +512,42 @@ class reciete_editor:
                     self.itemsbox.destroy()
                 except:
                     pass
-            
+                
+                
+                
+                
                 self.itemsbox = gtk.VBox(False)
-                self.recietescroll.add_with_viewport(self.itemsbox)
+                
+                self.orgabox.pack_start(self.itemsbox, False)
+                
+                
+                
                 
                 def itemline(index, inf):
                     
                     self.oneibox = gtk.HBox(False)
                     self.itemsbox.pack_end(self.oneibox, False)
                     
-                    
+                    itemicon = gtk.Image()
+                    itemicon.set_from_file("py_data/icons/item.png")
+                    self.oneibox.pack_start(itemicon, False)
                     
                     self.oneibox.pack_start(gtk.Label(str(inf[2]*inf[0])+"$ |  X  "+str(inf[0])+" | "+inf[1]+" | Per 1: "+str(inf[2])+"$"), False)
                     
                     def deletebutton(w, ind):
+                        
+                        self.totalbutton.set_value(self.totalbutton.get_value()-self.rlist[ind][0]*self.rlist[ind][2])
+                        
                         del self.rlist[ind]
                         refrash()
                     
-                    deleteline = gtk.Button("Delete")
+                    deleteline = gtk.Button()
+                    deletelineicon = gtk.Image()
+                    deletelineicon.set_from_file("py_data/icons/delete.png")
+                    deleteline.add(deletelineicon)
+                    deleteline.props.relief = gtk.RELIEF_NONE
                     self.oneibox.pack_end(deleteline, False)
+                    
                     deleteline.connect("clicked", deletebutton, index)
                     
                     
@@ -334,26 +561,96 @@ class reciete_editor:
                 
             refrash()
             
+            self.comview = gtk.TextView()
+            self.comscroll = gtk.ScrolledWindow()
+            self.comscroll.add(self.comview)
+            self.comscroll.set_size_request(100,100)
+            self.recbox.pack_start(self.comscroll, False)
+            
+            self.comtext = self.comview.get_buffer()
+            
+            self.comtext.set_text(self.comment)
+            
+            
             self.recbox.pack_start(gtk.HSeparator(), False)
             finishbox = gtk.HBox(False)
             self.recbox.pack_start(finishbox, False)
             
             def cancelb(w):
                 self.addrecwin.destroy()
-            cancel_button = gtk.Button("Cancel")
+            cancel_button = gtk.Button()
+            cancel_buttonbox = gtk.HBox(False)
+            cancel_buttonicon = gtk.Image()
+            cancel_buttonicon.set_from_file("py_data/icons/delete.png")
+            cancel_buttonbox.pack_start(cancel_buttonicon, False)
+            cancel_buttonbox.pack_start(gtk.Label("  Cancel"))
+            cancel_button.add(cancel_buttonbox)
+            cancel_button.props.relief = gtk.RELIEF_NONE
             cancel_button.connect("clicked", cancelb)
             finishbox.pack_end(cancel_button, False)
             
+            self.converted = False
             
             def okb(w):
                 
+                if self.store == "":
+                    self.store = "Unknown"
                 
+                
+                self.comment = str( self.comtext.get_text(self.comtext.get_start_iter(), self.comtext.get_end_iter()))
+                
+                
+                
+                # adding all the stores, items
+                
+                global stores
+                global itmes
+                
+                if self.store not in stores:
+                
+                    stores.append(self.store)
+                
+                storeindex = 0
+                for i, s in enumerate(stores):
+                    if self.store == s:
+                        storeindex = i
+                
+                self.store = storeindex
+                
+                
+                for num, item in enumerate(self.rlist):
+                    
+                    if item[1] == "":
+                        item[1] = "Unknown"
+                    
+                    
+                    if item[1] not in items:
+                        items.append(item[1])
+                    
+                    self.converted = True
+                    
+                    itemsindex = 0
+                    for i, t in enumerate(items):
+                        if item[1] == t:
+                            itemindex = i
+                    print self.rlist[num][1], "rlist[num][1]"
+                    
+                    self.rlist[num][1] = itemindex
+                    
+                    print self.rlist[num][1], "rlist[num][1]"
+                    print
+                    
                 
                 global recietes
-                if self.r == 0:
-                    recietes.append([self.tag, self.store, self.time, self.date, self.total, self.rlist])
+                if self.r == -1:
+                    recietes.append([self.store, self.time, self.date, self.total, self.rlist, self.comment])
                 else:
-                    recietes[self.tag-1] = [self.tag, self.store, self.time, self.date, self.total, self.rlist]
+                    recietes[self.tag] = [self.store, self.time, self.date, self.total, self.rlist, self.comment]
+                
+                
+                print stores
+                print items
+                    
                     
                 self.addrecwin.destroy()
                 
@@ -361,7 +658,17 @@ class reciete_editor:
                 
                 
                 
-            ok_button = gtk.Button("Save Reciete")
+            ok_button = gtk.Button()
+            
+            ok_buttonbox = gtk.HBox(False)
+            ok_buttonicon = gtk.Image()
+            ok_buttonicon.set_from_file("py_data/icons/ok.png")
+            ok_buttonbox.pack_start(ok_buttonicon, False)
+            ok_buttonbox.pack_start(gtk.Label("  Ok"))
+            ok_button.add(ok_buttonbox)
+            ok_button.props.relief = gtk.RELIEF_NONE
+            
+            
             ok_button.connect("clicked", okb)
             finishbox.pack_end(ok_button, False)
             
@@ -376,15 +683,94 @@ class reciete_editor:
                 w.set_sensitive(True)
                 print self.time
                 
+                
+                
+                if self.converted == False:
+                    
+                    for num, item in enumerate(self.rlist):
+                        
+                        if item[1] == "":
+                            item[1] = "Unknown"
+                        
+                        
+                        
+                        if item[1] not in items:
+                            items.append(item[1])
+                        
+                        
+                        itemsindex = 0
+                        for i, t in enumerate(items):
+                            if item[1] == t:
+                                itemindex = i
+                        print self.rlist[num][1], "rlist[num][1]"
+                        
+                        self.rlist[num][1] = itemindex
+                        
+                        print self.rlist[num][1], "rlist[num][1]"
+                        print
+                
+                
+                
             self.addrecwin.connect("destroy", close)
             
             
             self.addrecwin.show_all()
     
 
-
+current = "r"
 
 def reload_win(w=None):
+    
+    
+    global cbs
+    global pds
+    
+    nowcb = 0
+    
+    for i in recietes:
+        nowcb = nowcb + i[3]
+        
+    
+    
+    FMT = "%y-%m-%d"
+        
+    today = str(datetime.today().strftime(FMT))
+    
+    
+    
+    
+    
+    nextsalary = ""
+    tmp = today.split("-")
+    
+    if int(tmp[2]) > 9:
+    
+        nextsalary = nextsalary + tmp[0] + "-"
+        nextsalary = nextsalary + str(int(tmp[1])+1) + "-"
+        nextsalary = nextsalary + "10"
+            
+    else:
+        
+        nextsalary = nextsalary + tmp[0] + "-"
+        nextsalary = nextsalary + str(int(tmp[1])) + "-"
+        nextsalary = nextsalary + "10"
+        
+    
+    x =  datetime.strptime(nextsalary, FMT) - datetime.today()
+   
+    nowpd = (float(nowcb)/int(x.days)*100)/100
+    
+    if lastdate == str(datetime.now().strftime(lastdateformat)):
+        cbs[-1] = nowcb
+        pds[-1] = nowpd
+    else:
+        cbs.append(nowcb)
+        pds.append(nowpd) 
+    
+    
+    
+    global lastdate
+    lastdate = str(datetime.now().strftime(lastdateformat))
     
     global mainbox
     mainbox.destroy()
@@ -398,18 +784,179 @@ def reload_win(w=None):
     toppanel = gtk.HBox(False)
     mainbox.pack_start(toppanel, False)
     
-    openfilebutton = gtk.Button("Open")
+    def openbuttonaction(w):
+        
+        global cbs, pds, pdsettings, lastdate, stores, items, recietes
+        
+        global savefile
+        savefile = getlocation.get()
+        
+        cbs, pds, pdsettings, lastdate, stores, items, recietes = jyfi.openfile(savefile)
+        
+        mainwindow.set_title("J.Y.FINANCER "+savefile)
+        
+        reload_win()
+        
+    openfilebutton = gtk.Button()
+    
+    openfilebuttonicon = gtk.Image()
+    
+    openfilebuttonicon.set_from_file("py_data/icons/open.png")
+    
+    openfilebuttonbox = gtk.HBox(False)
+    openfilebuttonbox.pack_start(openfilebuttonicon,False)
+    openfilebuttonbox.pack_start(gtk.Label("  Open"))
+    openfilebutton.add(openfilebuttonbox)
     toppanel.pack_start(openfilebutton, False)
+    openfilebutton.props.relief = gtk.RELIEF_NONE
+    openfilebutton.connect("clicked", openbuttonaction)
     
-    savefilebutton = gtk.Button("Save")
+    def savebuttonaction(w):
+        
+        if not savefile:
+            jyfi.savefile(getlocation.get(), cbs, pds, pdsettings, lastdate, stores, items, recietes)
+        else:
+            jyfi.savefile(savefile, cbs, pds, pdsettings, lastdate, stores, items, recietes)
+    savefilebutton = gtk.Button()
     toppanel.pack_start(savefilebutton, False)
+    savefilebuttonicon = gtk.Image()
+    savefilebuttonicon.set_from_file("py_data/icons/save.png")
+    savefilebuttonbox = gtk.HBox(False)
+    savefilebuttonbox.pack_start(savefilebuttonicon,False)
+    savefilebuttonbox.pack_start(gtk.Label("  Save"))
+    savefilebutton.add(savefilebuttonbox)
+    savefilebutton.connect("clicked", savebuttonaction)
+    savefilebutton.props.relief = gtk.RELIEF_NONE
     
-    saveasfilebutton = gtk.Button("Save As")
+    def saveasbuttonaction(w):
+        
+        global savefile
+        savefile = getlocation.get()
+        
+        jyfi.savefile(savefile, cbs, pds, pdsettings, lastdate, stores, items, recietes)
+        mainwindow.set_title("J.Y.FINANCER "+savefile)
+        
+    saveasfilebutton = gtk.Button()
+    saveasfilebuttonicon = gtk.Image()
+    saveasfilebuttonicon.set_from_file("py_data/icons/saveas.png")
+    saveasfilebuttonbox = gtk.HBox(False)
+    saveasfilebuttonbox.pack_start(saveasfilebuttonicon,False)
+    saveasfilebuttonbox.pack_start(gtk.Label("  Save As..."))
+    saveasfilebutton.add(saveasfilebuttonbox)
+    saveasfilebutton.props.relief = gtk.RELIEF_NONE
+    saveasfilebutton.connect("clicked", saveasbuttonaction)
     toppanel.pack_start(saveasfilebutton, False)
     
-    filenamepreview = gtk.Label("No File")
-    toppanel.pack_start(filenamepreview, False)
     
+    # CB AND PD
+    
+    text = "CB: "+ str(cbs[-1]) + "  PD: "+ str(int(pds[-1]))
+    toppanel.pack_start(gtk.Label(text))
+    
+    
+    
+    
+    
+    
+    # COUNT
+    
+    count = gtk.Button()
+    counticon = gtk.Image()
+    counticon.set_from_file("py_data/icons/money.png")
+    countbox = gtk.HBox(False)
+    countbox.pack_start(counticon, False)
+    countbox.pack_start(gtk.Label("  Count CB"))
+    count.add(countbox)
+    count.props.relief = gtk.RELIEF_NONE
+    toppanel.pack_start(count, False)
+    
+    def counting(w):
+        
+        countwindow = gtk.Window()
+        countwindow.set_default_size(300, 300)
+        countwindow.set_position(gtk.WIN_POS_CENTER)
+        countwindow.set_title("Counting CB")
+        
+        
+        cbox = gtk.VBox(False)
+        countwindow.add(cbox)
+        cbox.pack_start(gtk.Label("\nCB means Current Balance\nThis is a window to output your CB.\nIt will do it by creating an\nempty reciete with a formula.\nCB - previous CB\nTo make the CB correct."), False)
+        
+        abox = gtk.HBox(False)
+        cbox.pack_start(abox, False)
+        
+        abox.pack_start(gtk.Label("Your CB: "))
+        
+        newcbadj = gtk.Adjustment(0.01,-999999999999999999, 999999999999999999, 0.01, 0.01)
+        newcb = gtk.SpinButton(newcbadj, 0.01, 2)
+        newcb.set_value(float(0))
+        newcb.set_wrap(True)
+        abox.pack_start(newcb)
+        
+        
+        
+        finishbox = gtk.HBox(False)
+        cbox.pack_end(finishbox, False)
+        
+        def okb(w):
+            global recietes
+            #[self.store, self.time, self.date, self.total, self.rlist, self.comment]
+            
+            global stores
+            if "COUNTING" not in stores:
+                stores.append("COUNTING")
+            
+            
+            
+            for index, i in enumerate(stores):
+                if "COUNTING" == i:
+                    break
+            
+            
+            
+            time = [int(datetime.now().hour), int(datetime.now().minute)]
+            date = [int(datetime.now().year), int(datetime.now().month), int(datetime.now().day)]
+            
+            recietes.append([index, time, date, float(newcb.get_value()-cbs[-1]),[], "COUNTING CB "+str(newcb.get_value()) ])
+                
+            countwindow.destroy()
+            reload_win()
+            
+            
+            
+        ok_button = gtk.Button()
+            
+        ok_buttonbox = gtk.HBox(False)
+        ok_buttonicon = gtk.Image()
+        ok_buttonicon.set_from_file("py_data/icons/ok.png")
+        ok_buttonbox.pack_start(ok_buttonicon, False)
+        ok_buttonbox.pack_start(gtk.Label("  Ok"))
+        ok_button.add(ok_buttonbox)
+        ok_button.props.relief = gtk.RELIEF_NONE
+        
+        
+        ok_button.connect("clicked", okb)
+        finishbox.pack_end(ok_button, False)
+        
+        countwindow.show_all()
+    
+    count.connect("clicked", counting)
+    
+    
+    
+    #search
+    searchbox = gtk. HBox(False)
+    toppanel.pack_end(searchbox, False)
+    
+    searchentry = gtk.Entry()
+    searchbox.pack_start(searchentry, False)
+    
+    searchbutton = gtk.Button()
+    searchbuttonicon = gtk.Image()
+    searchbuttonicon.set_from_file("py_data/icons/search.png")
+    searchbutton.add(searchbuttonicon)
+    searchbox.pack_start(searchbutton, False)
+    searchbutton.props.relief = gtk.RELIEF_NONE
     
     
     
@@ -421,28 +968,63 @@ def reload_win(w=None):
     toolbar = gtk.HBox(False)
     mainbox.pack_start(toolbar, False)
     
+    def setcurrent(w, r):
+        global current
+        current = r
+        reload_win()
+    
+    receitesbutton = gtk.Button()
+    receitesbuttonbox = gtk.HBox(False)
+    receitesbuttonicon = gtk.Image()
+    receitesbuttonicon.set_from_file("py_data/icons/file.png")
+    receitesbuttonbox.pack_start(receitesbuttonicon, False)
+    receitesbutton.add(receitesbuttonbox)
+    receitesbuttonbox.pack_start(gtk.Label("  Recietes"))
+    receitesbutton.props.relief = gtk.RELIEF_NONE
+    receitesbutton.connect("clicked", setcurrent, "r")
+    toolbar.pack_start(receitesbutton, False)
+    
+    itemsbutton = gtk.Button()
+    itemsbuttonbox = gtk.HBox(False)
+    itemsbuttonicon = gtk.Image()
+    itemsbuttonicon.set_from_file("py_data/icons/item.png")
+    itemsbuttonbox.pack_start(itemsbuttonicon, False)
+    itemsbutton.add(itemsbuttonbox)
+    itemsbuttonbox.pack_start(gtk.Label("  Items"))
+    itemsbutton.props.relief = gtk.RELIEF_NONE
+    itemsbutton.connect("clicked", setcurrent, "i")
+    toolbar.pack_start(itemsbutton, False)
+    
+    storesbutton = gtk.Button()
+    storesbuttonbox = gtk.HBox(False)
+    storesbuttonicon = gtk.Image()
+    storesbuttonicon.set_from_file("py_data/icons/store.png")
+    storesbuttonbox.pack_start(storesbuttonicon, False)
+    storesbutton.add(storesbuttonbox)
+    storesbuttonbox.pack_start(gtk.Label("  Places"))
+    storesbutton.props.relief = gtk.RELIEF_NONE
+    storesbutton.connect("clicked", setcurrent, "s")
+    toolbar.pack_start(storesbutton, False)
     
     
     
     
-    
-    #search
-    searchbox = gtk. HBox(False)
-    toolbar.pack_end(searchbox, False)
-    
-    #searchentry = gtk.Entry()
-    #searchbox.pack_start(searchentry, False)
-    
-    #searchbutton = gtk.Button("Search")
-    #searchbox.pack_start(searchbutton, False)
     
     
         
         
     
-    addreciet = gtk.Button("Add Reciete")
+    addreciet = gtk.Button() #"Add Reciete"
+    addrecietbox = gtk.HBox(False)
+    addrecieticon = gtk.Image()
+    addrecieticon.set_from_file("py_data/icons/add_file.png")
+    addrecietbox.pack_start(addrecieticon, False)
+    addrecietbox.pack_start(gtk.Label("  Add Reciete"))
+    addreciet.props.relief = gtk.RELIEF_NONE
+    addreciet.add(addrecietbox)
+    
     toolbar.pack_end(addreciet, False)
-    addreciet.connect("clicked", reciete_editor, 0)
+    addreciet.connect("clicked", reciete_editor, -1)
     
     
     # RECIETES
@@ -450,28 +1032,79 @@ def reload_win(w=None):
     rscroll = gtk.ScrolledWindow()
     mainbox.pack_start(rscroll)
     
-    rbox = gtk.VBox()
-    rscroll.add_with_viewport(rbox)
+    rbox1 = gtk.VBox(False)
+    rscroll.add_with_viewport(rbox1)
     
-    def rec(index):
+    rbox = gtk.VBox()
+    rbox1.pack_start(rbox, False)
+    
+    # FUNCTION THAT DRAWS THE RECIETES LIST ONTO THE SCREEN
+    def rec(index, r):
         rebox = gtk.HBox(False)
         rbox.pack_end(rebox, False)
         
-        r = recietes[index]
-        text = "$"+str(r[4])+"     "+str(r[3][0])+"/"+str(r[3][1])+"/"+str(r[3][2])+"     "+str(r[2][0])+":"+str(r[2][1])+"     "+str(r[1])
+        if current == "r":
+            text = "  "+str(r[2][0])+"/"+str(r[2][1])+"/"+str(r[2][2])+"     "+str(r[1][0])+":"+str(r[1][1])+"     "+str(stores[r[0]]+"  "+str(r[3])+" $")
         
+        else:
+            text = str(r)
         # 3 2 4 1
         
         
-        callrec = gtk.Button(text)
+        callrec = gtk.Button()
+        callrec.props.relief = gtk.RELIEF_NONE
+        callrecbox = gtk.HBox(False)
+        callicon = gtk.Image()
+        
+        if current == "r":
+            callicon.set_from_file("py_data/icons/file.png")
+        elif current == "i":
+            callicon.set_from_file("py_data/icons/item.png")
+        elif current == "s":
+            callicon.set_from_file("py_data/icons/store.png")
+        callrecbox.pack_start(callicon, False)
+        callrecbox.pack_start(gtk.Label("  "+text), False)
+        callrec.add(callrecbox)
+        
+        
+        
         rebox.pack_start(callrec)
-        callrec.connect("clicked", reciete_editor, index+1)
         
-    
-    for i in recietes:
+        if current == "r":
+            
+            callrec.connect("clicked", reciete_editor, index)
+            
+            deletebutton = gtk.Button()
+            deletebutton.props.relief = gtk.RELIEF_NONE
+            deleteicon = gtk.Image()
+            deleteicon.set_from_file("py_data/icons/delete.png")
+            deletebutton.add(deleteicon)
+            rebox.pack_end(deletebutton, False)
+            
+            def deleter(w, i):
+                
+                del recietes[i]
+                reload_win()
+                
+            deletebutton.connect("clicked", deleter, index)
+                
+            
+            
+            
+        else:
+            
+            callrec.connect("clicked", item_viewer, index)
         
-        rec(i[0]-1)        
-    
+    if current == "r":
+        for index, i in enumerate(recietes):
+        
+            rec(index, recietes[index])        
+    elif current == "i":
+        for index, i in enumerate(items):
+            rec(index, items[index])
+    elif current == "s":
+        for index, i in enumerate(stores):
+            rec(index, stores[index])
     
     mainbox.show_all()
 
